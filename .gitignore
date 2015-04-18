@@ -1,0 +1,9 @@
+nimcache/
+bin/
+media/
+try/
+
+.DS_Store
+
+*.sublime-project
+*.sublime-workspace
