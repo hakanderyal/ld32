@@ -70,7 +70,10 @@ proc addToLayer* (this: World, kind: LayerKind, node: SceneNode) =
 
 proc addRandomAtomic* (this: World) =
   var rAtomic = newAtomic(AtomicKind.Positive, this.textureHolder)
-  rAtomic.position = vec2(this.worldView.size.x/2.0 + random(-250.0..250.0), this.worldBounds.height - this.worldView.size.y/2.0 + random(-250.0..250.0))
+  var
+    randomX = random(-450.0..450.0)
+    randomY = random(-450.0..450.0)
+  rAtomic.position = vec2(this.worldView.size.x/2.0 + randomX, this.worldBounds.height - this.worldView.size.y/2.0 + randomY)
   rAtomic.velocity = vec2(random(-50.0..50.0), random(-50.0..50.0))
 
   var atomicSceneNode = newSceneNode()
