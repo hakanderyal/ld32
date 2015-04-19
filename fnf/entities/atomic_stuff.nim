@@ -24,10 +24,14 @@ proc toTextureID(atomicKind: AtomicKind): TextureID =
 proc newAtomic*(kind: AtomicKind, textureHolder: TextureHolder): Atomic =
   new result
   result.kind = kind
-  result.transformable = newTransformable()
+  result.setup()
 
   result.drawable = newSprite()
   result.texture = textureHolder.get(kind.toTextureID).texture
+
+proc resetTexture*(this: Atomic, textureHolder: TextureHolder) =
+
+  this.texture = textureHolder.get(this.kind.toTextureID).texture
 
 method category* (this: Atomic): int =
   return ord(CommandType.ctAtomic)
@@ -44,3 +48,27 @@ method update*(this: Atomic, deltaTime: Time) =
      this.velocity.y = -this.velocity.y
 
   this.move(this.velocity * deltaTime.asSeconds)
+
+method applyForce*(this: Entity, force: Vector2f) =
+  this.velocity.x = this.velocity.x + force.x
+  this.velocity.y = this.velocity.y + force.y
+
+  if this.velocity.x < 0:
+    this.velocity.x = max(-this.maxVelocity, this.velocity.x)
+  else:
+    this.velocity.x = min(this.maxVelocity, this.velocity.x)
+
+  if this.velocity.y < 0:
+    this.velocity.y = max(-this.maxVelocity, this.velocity.y)
+  else:
+    this.velocity.y = min(this.maxVelocity, this.velocity.y)
+
+method activateCollided*(this: Atomic, textureHolder: TextureHolder) =
+  this.kind = AtomicKind.Negative
+
+  this.resetTexture(textureHolder)
+
+method deactivateCollided*(this: Atomic, textureHolder: TextureHolder) =
+  this.kind = AtomicKind.Positive
+
+  this.resetTexture(textureHolder)

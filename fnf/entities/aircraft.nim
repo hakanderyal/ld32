@@ -21,17 +21,13 @@ proc toTextureID(aircraftKind: AircraftKind): TextureID =
 proc newAircraft*(kind: AircraftKind, textureHolder: TextureHolder): Aircraft =
   new result
   result.kind = kind
-  result.transformable = newTransformable()
+  result.setup()
 
   result.drawable = newSprite()
   result.texture = textureHolder.get(kind.toTextureID).texture
-  result.powerCircle = newPowerCircle(PowerCircleKind.Positive, textureHolder)
-
-method draw*(this: Aircraft, target: RenderWindow, states: RenderStates) =
-  draw(target, this.powerCircle.drawable, states)
-  draw(target, this.drawable, states)
 
 method category* (this: Aircraft): int =
   case this.kind:
   of AircraftKind.MainShip:
     return ord(CommandType.ctPlayerAircraft)
+  

@@ -79,6 +79,10 @@ proc processInput(this: Game) =
         this.decreaseSpeed()
       of KeyCode.G:
         this.showGrid = not this.showGrid
+      of KeyCode.Num9:
+        this.world.removeLastAtomic()
+      of KeyCode.Num0:
+        this.world.addRandomAtomic(1)
       else:
         discard
 
@@ -110,10 +114,13 @@ proc run*(this: Game) =
   
   var clock = newClock()
   var timeSinceLastUpdate: Time = Time(microseconds: 0)
+  var totalElapsedTime: Time = Time(microseconds: 0)
+  var sCount = 0
 
   while this.window.open:
 
     var elapsedTime = clock.restart()
+    totalElapsedTime = totalElapsedTime + elapsedTime
     timeSinceLastUpdate = timeSinceLastUpdate + elapsedTime
     # timeSinceLastUpdate += clock.restart()
 
@@ -123,10 +130,16 @@ proc run*(this: Game) =
       this.processInput
       
       if not this.isPaused:
+        if totalElapsedTime > seconds(1):
+          # sCount += 1
+          totalElapsedTime = Time(microseconds: 0)
+          # echo sCount
+          this.world.endTurn()
         this.updateGame(this.TimePerFrame)
 
     this.updateStatistics(elapsedTime);
     this.render
+    # echo getTotalMem() / 1024
 
 
 proc newGame*(): Game =
@@ -158,7 +171,8 @@ proc setup*(game: var Game) =
   )
 
   game.world = newWorld(game.window)
-  game.player = newPlayer()
+  game.player = newPlayer(300)
+  game.world.player = game.player
 
   game.grid = createGrid(50, game.world.window.size)
 

@@ -2,6 +2,12 @@ import csfml, csfml_ext
 
 import fnf.ecs.entity
 
+import utils.misc
+
+import sets, hashes
+
+import math
+
 type
 
   SceneNode* = ref object {.inheritable.}
@@ -9,6 +15,7 @@ type
     parent*: SceneNode
 
     sceneObj*: Entity
+    id*: int
 
   # IDrawable* = object
   #   draw*:  proc (target: RenderWindow, state: RenderStates)
@@ -20,9 +27,18 @@ type
 
 proc update*(this: SceneNode, deltaTime: Time)
 
+proc collidingWith*(this: SceneNode, target: SceneNode): bool  
+
+## end forward
+
+proc hash(x: SceneNode): THash =
+  result = hash(x.id)  
+
 proc newSceneNode*(): SceneNode =
+  math.randomize()
   result = SceneNode()
   result.children = @[]
+  result.id = random(30000000)
 
 proc setObj* [T](node: var SceneNode, item: T) =
   # node.sceneObj = IDrawable(
@@ -97,3 +113,40 @@ proc worldTransform*(this: SceneNode): Transform =
 
 proc worldPosition*(this: SceneNode): Vector2f =
   return this.worldTransform * vec2(0, 0)
+
+proc checkNodeCollision* (this: SceneNode, target: SceneNode, collisionList: var HashSet[Pair[SceneNode, SceneNode]]) =
+  # echo this.sceneObj.isPlayerOwned
+  if this.hasDrawable and target.hasDrawable:
+    if not (this.sceneObj.isPlayerOwned and target.sceneObj.isPlayerOwned):
+      if (this != target) and (this.collidingWith(target)):
+        collisionList.incl(minmax(this, target))
+
+  for childNode in this.children:
+    childNode.checkNodeCollision(target, collisionList)
+
+proc checkSceneCollision* (this: SceneNode, target: SceneNode, collisionList: var HashSet[Pair[SceneNode, SceneNode]]) =
+  this.checkNodeCollision(target, collisionList)
+
+  for targetChild in target.children:
+    this.checkSceneCollision(targetChild, collisionList)
+
+proc collidingWith*(this: SceneNode, target: SceneNode): bool =
+  if not this.hasDrawable:
+    return false
+  if not target.hasDrawable:
+    return false
+
+  var
+
+    radius1 = this.sceneObj.objRadius
+    radius2 = target.sceneObj.objRadius
+
+    distance = this.worldPosition - target.worldPosition
+
+  result = ((distance.x * distance.x) + (distance.y * distance.y)) <= ((radius1 + radius2) * (radius1 + radius2))
+  # echo this.sceneObj.name
+  # echo "radius: " & $radius1 & " worldPosition: " & $this.worldPosition
+  # echo target.sceneObj.name
+  # echo "radius: " & $radius2 & " worldPosition: " & $target.worldPosition
+  # echo result
+  # echo "!!"

@@ -18,7 +18,6 @@ proc toTextureID(backgroundKind: BackgroundKind): TextureID =
 proc newBackground*(kind: BackgroundKind, textureHolder: TextureHolder): Background =
   new result
   result.kind = kind
-  result.transformable = newTransformable()
 
   result.drawable = newSprite()
   result.texture = textureHolder.get(kind.toTextureID).texture
@@ -26,6 +25,5 @@ proc newBackground*(kind: BackgroundKind, textureHolder: TextureHolder): Backgro
 proc newBackground*(kind: BackgroundKind, textureHolder: TextureHolder, rectangle: IntRect): Background =
   new result
   result.kind = kind
-  result.transformable = newTransformable()
 
   result.drawable = newSprite(textureHolder.get(kind.toTextureID).texture, rectangle)
