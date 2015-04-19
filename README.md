@@ -1,4 +1,5 @@
-# Ludum Dare 32 - Theme: An Unconventional Weapon
+# Ludum Dare 32
+# Theme: An Unconventional Weapon
 
 ## Intro (tentative)
 
@@ -15,3 +16,10 @@ So, the finest scientist of earth has come together and built an weapon, an unco
 You are that nano machine. An unconventional weapon, to destroy an unconventional enemy, in an unconventional way.
 
 Save the humanity!
+
+## Info
+
+- Language: Nim (nim-lang.org)
+- Libs: SFML - nim-sfml
+- Graphics: Sketch / Pixen
+- Sounds: not sure yet.
