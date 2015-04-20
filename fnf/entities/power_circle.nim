@@ -17,7 +17,7 @@ type
 proc toColor(pcKind: PowerCircleKind): Color =
   case pcKind:
   of PowerCircleKind.Positive:
-    return color(237,250,242, 50)
+    return color(227,250,255, 100)
   of PowerCircleKind.Negative:
     return color(250,238,237, 50)
 

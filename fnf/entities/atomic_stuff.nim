@@ -1,4 +1,5 @@
 import csfml, csfml_ext
+import math
 import fnf.ecs.entity
 import fnf.resources
 import fnf.commands.command_type
@@ -10,6 +11,7 @@ import fnf.context
 type
   Atomic* = ref object of Entity
     kind*: AtomicKind
+    instability*: float
   
   AtomicKind* {. pure .} = enum
     Positive, Negative
@@ -33,10 +35,17 @@ proc resetTexture*(this: Atomic, textureHolder: TextureHolder) =
 
   this.texture = textureHolder.get(this.kind.toTextureID).texture
 
+proc resetTexture*(this: Atomic, textureHolder: TextureHolder, textureID: TextureID) =
+
+  this.texture = textureHolder.get(textureID).texture
+
 method category* (this: Atomic): int =
   return ord(CommandType.ctAtomic)
 
 method update*(this: Atomic, deltaTime: Time) =
+  this.instability = sqrt(float(this.velocity.x * this.velocity.x) + float(this.velocity.y * this.velocity.y))
+  # if this.velocity > 200:
+
   let borderDistance = 10.0
 
   if (this.position.x < contextObj.viewBounds.left + borderDistance) or

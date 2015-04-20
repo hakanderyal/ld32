@@ -6,7 +6,7 @@ type
     map: OrderedTableRef[TextureID, ImportedTexture]
 
   TextureID* {. pure .} = enum 
-    MainShip, AtomicPositive, AtomicNegative
+    MainShip, AtomicPositive, AtomicNegative, AtomicPositiveFast
 
   ImportedTexture* = ref object
     texture*: Texture

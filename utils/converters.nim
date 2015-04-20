@@ -14,6 +14,13 @@ proc fRect*(vec1: Vector2f, vec2: Vector2f): FloatRect =
   result.width = cfloat(vec2.x)
   result.height = cfloat(vec2.y)
 
+proc fRect*(x: float, y: float, width: float, height: float): FloatRect =
+  result = FloatRect()
+  result.top = x
+  result.left = y
+  result.width = width
+  result.height = height
+
 proc iRect*(vec1: Vector2f, vec2: Vector2f): IntRect =
   result = IntRect()
   result.left = cint(vec1.x)

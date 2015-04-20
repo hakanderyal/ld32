@@ -34,6 +34,7 @@ type
     
     sceneGraph*: SceneNode
     sceneLayers: seq[ref Layer]
+    atomics*: seq[Entity]
 
     worldBounds: FloatRect
     spawnPosition: Vector2f
@@ -43,13 +44,15 @@ type
 
     playerAircraft*: Aircraft
 
-    worldView: View
+    worldView*: View
     window*: RenderWindow
 
     collisionList: HashSet[Pair[SceneNode, SceneNode]]
     recentlyCollided: HashSet[Pair[SceneNode, SceneNode]]
 
     player*: Player
+
+    instability*: float
 
 proc newLayer*(kind: LayerKind): Layer =
   new result
@@ -61,9 +64,10 @@ proc newLayerRef*(kind: LayerKind): ref Layer =
   result[] = newLayer(kind)
 
 proc loadTextures* (this: World) =
-  this.textureHolder.load(TextureID.MainShip, "media/textures/MainShip.png")
-  this.textureHolder.load(TextureID.AtomicPositive, "media/textures/AtomicPositive.png")
-  this.textureHolder.load(TextureID.AtomicNegative, "media/textures/AtomicNegative.png")
+  this.textureHolder.load(TextureID.MainShip, "./media/textures/MainShip.png")
+  this.textureHolder.load(TextureID.AtomicPositive, "./media/textures/AtomicPositive.png")
+  this.textureHolder.load(TextureID.AtomicPositiveFast, "./media/textures/AtomicPositiveFast.png")
+  this.textureHolder.load(TextureID.AtomicNegative, "./media/textures/AtomicNegative.png")
   # this.textureHolder.load(TextureID.Raptor, "media/textures/Raptor.png")
   # this.textureHolder.load(TextureID.Desert, "media/textures/Desert2x.png")
 
@@ -93,9 +97,13 @@ proc addRandomAtomic* (this: World, count: int) =
   atomicSceneNode.setObj(rAtomic)
 
   this.addToLayer(lkAir, atomicSceneNode)
+  this.atomics.add(rAtomic)
 
 proc removeLastAtomic* (this: World) =
-  this.sceneLayers[ord(lkAir)].children.delete(high(this.sceneLayers[ord(lkAir)].children)-1)
+  var id = high(this.sceneLayers[ord(lkAir)].children)-1
+  if id > 0:
+    this.atomics.delete(this.atomics.find(this.sceneLayers[ord(lkAir)].children[id].sceneObj))
+    this.sceneLayers[ord(lkAir)].children.delete(id)
 
 proc buildScene* (this: World) =
   math.randomize()
@@ -168,6 +176,7 @@ proc endTurn* (this: World) =
 
 proc handleCollisions* (this: World) =
   # echo this.recentlyCollided.len
+  # echo this.atomics.len
   for pairs in this.collisionList:
     var vPairs = pairs
     if vPairs.matchTypes(ctAtomic, ctAtomic):
@@ -216,6 +225,7 @@ proc handleCollisions* (this: World) =
         vPairs.first.sceneObj.applyForce(force)
     if vPairs.matchTypes(ctPlayerAircraft, ctAtomic):
       echo "atomic & player"
+      this.atomics.delete(this.atomics.find(vPairs.second.sceneObj))
       discard this.sceneLayers[ord(lkAir)][].detachChild(vPairs.second)
       # vPairs.first.
       discard
@@ -260,6 +270,43 @@ proc update* (this: World, dt: Time) =
 
   this.playerAircraft.position = position
 
+  this.instability = 0
+  for atmc in this.atomics:
+    this.instability = this.instability + Atomic(atmc).instability
+    if Atomic(atmc).instability > 250:
+      Atomic(atmc).resetTexture(this.textureHolder, TextureID.AtomicNegative)
+    if Atomic(atmc).instability < 250:
+      Atomic(atmc).resetTexture(this.textureHolder, TextureID.AtomicPositive)
+    # atmc.position = vec2(atmc.position.x + random(1.0), atmc.position.y + random(1.0))
+
+proc resize*(this: World, event: Event) =
+  # echo event.size
+  # echo this.worldView.size
+  var aspectWidth = float(event.size.width)
+  var aspectHeight = float(event.size.height)
+  var
+    newWidth: float
+    newHeight: float
+  if aspectWidth != this.worldView.size.x:
+    newWidth = aspectWidth
+    newHeight = newWidth / (4/3)
+  elif aspectHeight != this.worldView.size.y:
+    newHeight = aspectHeight
+    newWidth = newHeight * (4/3)
+
+  echo newWidth
+  echo newHeight
+  echo this.window.size
+
+  # var visibleArea: FloatRect
+
+  # # if float(newHeight) > float(this.window.size.y):
+  #   # var difference = (newHeight - float(this.window.size.y)) * (4/3)
+  # visibleArea = fRect(0, 0, float(newWidth), float(newHeight))
+  
+  # this.worldView.size = vec2(int(newWidth), int(newHeight))
+  this.window.size = vec2(int(newWidth), int(newHeight))
+
 proc newWorld*(window: RenderWindow): World =
   new result
 
@@ -268,9 +315,13 @@ proc newWorld*(window: RenderWindow): World =
   init(result.collisionList)
   init(result.recentlyCollided)
 
-  result.worldView = newView(fRect(vec2(0.0, 0.0), vec2(1200.0, 900.0)))
+  # result.worldView = newView(fRect(vec2(0.0, 0.0), vec2(1200.0, 900.0)))
+  result.worldView = newView(fRect(vec2(0.0, 0.0), vec2(window.size.x, window.size.y)))
+  # echo result.worldView.viewPort
+  # result.worldView.viewPort = fRect(vec2(0.0, 0.0), vec2(1.0, 1.0))
 
   result.textureHolder = newTextureMap()
+  result.atomics = @[]
 
   result.worldBounds = rect(0.0, 0.0, result.worldView.size.x, 2000.0)
   result.spawnPosition = vec2(result.worldView.size.x/2.0, result.worldBounds.height - result.worldView.size.y/2.0)
